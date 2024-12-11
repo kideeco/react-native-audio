@@ -69,16 +69,31 @@ void HandleInputBuffer(void *inUserData,
   self->onError = onError;
   
   // Configuration and activation of audio session.
-  /*
   NSError *error;
   AVAudioSession *audioSession = [AVAudioSession sharedInstance];
-  [audioSession setCategory:AVAudioSessionCategoryRecord error:&error];
-  [self handleError:error];
-  [audioSession setMode:AVAudioSessionModeMeasurement error:&error];
-  [self handleError:error];
-  [audioSession setActive:YES error:&error];
-  [self handleError:error];
-   */
+  
+  if (@available(iOS 15.0, *)) {
+      // Set the audio session category to Record.
+      [audioSession setCategory:AVAudioSessionCategoryPlayAndRecord
+                           mode:AVAudioSessionModeVoiceIsolation
+                        options:AVAudioSessionCategoryOptionDefaultToSpeaker
+                          error:&error];
+      [self handleError:error];
+      
+      // Activate the audio session.
+      [audioSession setActive:YES error:&error];
+      [self handleError:error];
+  } else {
+      // Fallback for iOS versions that don't support voice isolation.
+      [audioSession setCategory:AVAudioSessionCategoryRecord error:&error];
+      [self handleError:error];
+      
+      [audioSession setMode:AVAudioSessionModeMeasurement error:&error];
+      [self handleError:error];
+      
+      [audioSession setActive:YES error:&error];
+      [self handleError:error];
+  }
   
   // Creates stream configuration.
   AudioStreamBasicDescription config = {0};
